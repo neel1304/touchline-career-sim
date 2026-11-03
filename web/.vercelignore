@@ -1,0 +1,9 @@
+build.py
+firestore.rules
+firestore.indexes.json
+og-card.html
+DEPLOY.md
+.env.local
+.env*
+.gitignore
+node_modules

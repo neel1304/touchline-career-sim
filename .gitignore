@@ -1,0 +1,10 @@
+# secrets and local tooling: never commit these
+.env
+.env.*
+**/.env
+**/.env.*
+.vercel/
+**/.vercel/
+node_modules/
+.DS_Store
+**/.DS_Store

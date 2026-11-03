@@ -1,0 +1,22 @@
+/* Website-only look: the stadium photo behind the welcome screen, the club steps and the next-match card.
+   The dark gradients keep the text readable; the photo is only ever a mood, never the content. */
+.cs .cs-hero{
+  background:
+    linear-gradient(90deg,rgba(5,8,15,.95) 0%,rgba(5,8,15,.74) 40%,rgba(5,8,15,.2) 100%),
+    linear-gradient(0deg,rgba(5,8,15,.92) 0%,rgba(5,8,15,0) 40%),
+    url(img/stadium.webp) 65% 45%/cover no-repeat;
+  min-height:min(540px,72vh);justify-content:flex-end;border-color:rgba(255,255,255,.12)}
+@media (max-width:700px){
+  .cs .cs-hero{background:
+    linear-gradient(180deg,rgba(5,8,15,.5) 0%,rgba(5,8,15,.82) 55%,rgba(5,8,15,.96) 100%),
+    url(img/stadium-m.jpg) 55% 30%/cover no-repeat;min-height:0}
+}
+/* pick-a-club and ready screens: the same stadium, far back */
+.cs:not(:has(.cs-hero))::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,8,15,.78) 0%,rgba(5,8,15,.93) 70%),url(img/stadium.webp) center 40%/cover no-repeat}
+@media (max-width:700px){ .cs:not(:has(.cs-hero))::before{background:linear-gradient(180deg,rgba(5,8,15,.8),rgba(5,8,15,.94)),url(img/stadium-m.jpg) center/cover no-repeat} }
+/* in the game: a faint stadium inside the next-match card */
+.hero.vsb{position:relative;overflow:hidden;isolation:isolate}
+.hero.vsb::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.85;
+  background:linear-gradient(180deg,rgba(5,8,15,.35),rgba(5,8,15,.8)),url(img/stadium-m.jpg) center 55%/cover no-repeat}
+@media (prefers-reduced-motion:no-preference){ .cs .cs-hero{animation:tlfade .9s ease both} @keyframes tlfade{from{opacity:.001;transform:translateY(8px)}to{opacity:1;transform:none}} }

@@ -1,0 +1,61 @@
+rules_version = '2';
+// Touchline Career Sim. Every write carries _u, the writer's anonymous sign-in id (added by tl-firebase.js).
+// Everyone reads; people change only what they wrote; a league's owner runs the league.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function stampsMe() { return request.resource.data._u == request.auth.uid; }
+    function wroteIt() { return resource.data._u == request.auth.uid; }
+    function me() { return 'u' + request.auth.uid; }
+    function league(code) { return get(/databases/$(database)/documents/fl/$(code)).data; }
+    function inLeague(code) { return exists(/databases/$(database)/documents/fl/$(code)/m/$(me())); }
+
+    // leaderboard: one row per career or daily attempt
+    match /scores/{id} {
+      allow read: if true;
+      allow create: if signedIn() && stampsMe() && request.resource.data.sc is number && request.resource.data.sc < 100000000;
+      allow update: if signedIn() && stampsMe() && wroteIt();
+      allow delete: if false;
+    }
+    // shared team codes for one-off friend matches
+    match /teams/{id} {
+      allow read: if true;
+      allow create, update: if signedIn() && stampsMe() && (resource == null || wroteIt()) && request.resource.data.code is string && request.resource.data.code.size() < 20000;
+      allow delete: if signedIn() && wroteIt();
+    }
+    // friends leagues
+    match /fl/{code} {
+      allow read: if true;
+      allow create: if signedIn() && stampsMe() && request.resource.data.own == me();
+      allow update, delete: if signedIn() && stampsMe() && wroteIt();
+      // members: each manager writes their own entry; the owner can remove people before kick-off
+      match /m/{mid} {
+        allow read: if true;
+        allow create, update: if signedIn() && stampsMe() && mid == me() && request.resource.data.code is string && request.resource.data.code.size() < 20000;
+        allow delete: if signedIn() && (mid == me() || league(code)._u == request.auth.uid);
+      }
+      // results: posted by a member of the league; once written only that member or the owner can change it
+      match /r/{rid} {
+        allow read: if true;
+        allow create: if signedIn() && stampsMe() && inLeague(code);
+        allow update: if signedIn() && stampsMe() && inLeague(code) && (wroteIt() || league(code)._u == request.auth.uid);
+        allow delete: if false;
+      }
+    }
+    // cloud saves: only the signed-in owner (a Google account, not an anonymous visitor) reads or writes their own three slots
+    function ownsSave(uid) { return request.auth != null && request.auth.uid == uid && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    match /saves/{uid}/slots/{n} {
+      allow read, delete: if ownsSave(uid) && n in ['0', '1', '2'];
+      allow create, update: if ownsSave(uid) && n in ['0', '1', '2'];
+      match /c/{i} {
+        allow read, delete: if ownsSave(uid) && n in ['0', '1', '2'];
+        allow create, update: if ownsSave(uid) && n in ['0', '1', '2'] && request.resource.data.d is string && request.resource.data.d.size() < 950000;
+      }
+    }
+    // short leases so two people never play the same fixture at once
+    match /locks/{id} {
+      allow read: if signedIn();
+      allow write: if signedIn() && stampsMe();
+    }
+  }
+}

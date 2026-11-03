@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Share card</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Condensed:wght@600;700;800&display=swap">
+<style>body{margin:0;background:#05080f;color:#f4f6f9;font-family:Barlow,sans-serif} canvas{display:block;max-width:100%}</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="630"></canvas>
+<script>
+// draws the 1200x630 card shown when the site is shared on X/Twitter and elsewhere, then uploads it as og.png
+async function draw() {
+  await Promise.all(['800 150px "Barlow Condensed"', '700 40px "Barlow Condensed"', '600 30px "Barlow Condensed"', '500 28px Barlow', '600 24px Barlow'].map(f => document.fonts.load(f)));
+  const c = document.getElementById('c'), x = c.getContext('2d'), W = 1200, H = 630, blue = '#1d5fc8', ink = '#f4f6f9', mute = '#9ba7b9';
+  // the stadium photo, cropped to fill the card, then darkened toward the left so the title stays readable
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = 'img/stadium.webp'; });
+  const k = Math.max(W / img.width, H / img.height), dw = img.width * k, dh = img.height * k; x.drawImage(img, (W - dw) * 0.62, (H - dh) * 0.4, dw, dh);
+  let g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(5,8,15,.96)'); g.addColorStop(.5, 'rgba(5,8,15,.8)'); g.addColorStop(1, 'rgba(5,8,15,.45)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  g = x.createLinearGradient(0, H, 0, H * .55); g.addColorStop(0, 'rgba(5,8,15,.85)'); g.addColorStop(1, 'rgba(5,8,15,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  g = x.createRadialGradient(120, 40, 0, 120, 40, 520); g.addColorStop(0, 'rgba(29,95,200,.35)'); g.addColorStop(1, 'rgba(29,95,200,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // title block
+  x.fillStyle = blue; x.fillRect(72, 92, 64, 8);
+  x.fillStyle = mute; x.font = '700 30px "Barlow Condensed"'; x.letterSpacing = '6px'; x.fillText('FOOTBALL MANAGER CAREER', 72, 150);
+  x.fillStyle = ink; x.font = '800 150px "Barlow Condensed"'; x.letterSpacing = '0px'; x.fillText('TOUCHLINE', 64, 288);
+  x.fillStyle = blue; x.font = '800 72px "Barlow Condensed"'; x.letterSpacing = '4px'; x.fillText('CAREER SIM', 70, 362);
+  x.letterSpacing = '0px'; x.fillStyle = ink; x.font = '500 28px Barlow';
+  ['Real 2026/27 squads. Tactics that actually matter.', 'Start a league with your friends.'].forEach((t, i) => x.fillText(t, 72, 428 + i * 40));
+  // feature pills
+  let px = 72; x.font = '700 26px "Barlow Condensed"'; x.letterSpacing = '2px';
+  for (const t of ['LIVE MATCHES', 'TRANSFERS', 'DAILY CHALLENGE']) { const w = x.measureText(t).width + 36; x.fillStyle = 'rgba(255,255,255,.08)'; x.strokeStyle = 'rgba(255,255,255,.18)'; x.lineWidth = 1.5; x.beginPath(); x.roundRect(px, 520, w, 46, 8); x.fill(); x.stroke(); x.fillStyle = ink; x.fillText(t, px + 18, 552); px += w + 12; }
+  // friends league table
+  const tx = 700, ty = 128, tw = 420; x.letterSpacing = '0px';
+  x.fillStyle = 'rgba(255,255,255,.07)'; x.strokeStyle = 'rgba(255,255,255,.16)'; x.lineWidth = 1.5; x.beginPath(); x.roundRect(tx, ty, tw, 372, 18); x.fill(); x.stroke();
+  x.fillStyle = blue; x.beginPath(); x.roundRect(tx, ty, tw, 6, [18, 18, 0, 0]); x.fill();
+  x.fillStyle = mute; x.font = '700 24px "Barlow Condensed"'; x.letterSpacing = '4px'; x.fillText('FRIENDS LEAGUE', tx + 28, ty + 52);
+  x.letterSpacing = '0px'; x.fillStyle = mute; x.font = '600 20px Barlow'; x.fillText('Season 1 · Matchday 6', tx + 28, ty + 82);
+  const rows = [['1', 'Sam', '#e63946', 'WWDW', 16], ['2', 'You', '#1d5fc8', 'WDWL', 13], ['3', 'Priya', '#2fd07a', 'LWWD', 11], ['4', 'Leo', '#f2c14e', 'DLLW', 7]];
+  rows.forEach((r, i) => { const y = ty + 130 + i * 58;
+    if (r[1] === 'You') { x.fillStyle = 'rgba(29,95,200,.28)'; x.beginPath(); x.roundRect(tx + 14, y - 34, tw - 28, 50, 8); x.fill(); }
+    x.fillStyle = mute; x.font = '700 28px "Barlow Condensed"'; x.fillText(r[0], tx + 30, y);
+    x.fillStyle = r[2]; x.beginPath(); x.roundRect(tx + 62, y - 22, 22, 22, 5); x.fill();
+    x.fillStyle = ink; x.font = '700 30px "Barlow Condensed"'; x.fillText(r[1].toUpperCase(), tx + 98, y);
+    let fx = tx + 220; for (const ch of r[3]) { x.fillStyle = ch === 'W' ? '#2fd07a' : ch === 'D' ? '#f2c14e' : '#ff6464'; x.beginPath(); x.roundRect(fx, y - 24, 26, 26, 5); x.fill(); x.fillStyle = '#0a0d12'; x.font = '800 20px "Barlow Condensed"'; x.fillText(ch, fx + 7, y - 4); fx += 31; }
+    x.fillStyle = ink; x.font = '800 30px "Barlow Condensed"'; x.textAlign = 'right'; x.fillText(String(r[4]), tx + tw - 30, y); x.textAlign = 'left'; });
+  return c.toDataURL('image/png');
+}
+draw().then(u => window.__og = u);
+</script>
+</body>
+</html>
